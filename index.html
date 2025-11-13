@@ -32,7 +32,8 @@
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="logo-container" style="width:60px;height:60px;">
+          <div class="logo-co
+          ntainer" style="width:60px;height:60px;">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <circle cx="100" cy="80" r="35" fill="#FFA500"/><ellipse cx="100" cy="130" rx="45" ry="55" fill="#FFD700"/>
               <circle cx="90" cy="75" r="5" fill="#000"/><circle cx="110" cy="75" r="5" fill="#000"/>
@@ -92,7 +93,7 @@
       <div class="mt-8 pt-6 border-t-2 border-gray-200 text-sm text-gray-600 space-y-2">
         <p class="flex items-center gap-2"><span>📱</span><span>+56 9 8692 5310</span></p>
         <p class="flex items-center gap-2"><span>📍</span><span>Calle Vivar 1086, Iquique</span></p>
-        <p class="flex items-center gap-2"><span>🕐</span><span>Lun-Dom: 11:00 - 23:00</span></p>
+        <p class="flex items-center gap-2"><span>🕐</span><span>Lun-Dom: 11:30 - 23:00</span></p>
       </div>
     </div>
   </div>
@@ -103,7 +104,7 @@
     <div class="relative overflow-hidden" style="height:400px;">
       <div id="carousel-container" class="flex transition-transform duration-1000 ease-in-out h-full">
         <!-- 10 imágenes, margen 0 de canto a canto -->
-        <img class="min-w-full h-full object-cover" src="img/baner oferta mas chaufa.png" alt="">
+        <img class="min-w-full h-full object-cover" src="img/baner bistec.png" alt="">
         <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=1600&h=400&fit=crop" alt="">
         <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=1600&h=400&fit=crop" alt="">
         <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1562967914-608f82629710?w=1600&h=400&fit=crop" alt="">
@@ -263,7 +264,7 @@
           <h3 class="text-2xl font-bold mb-2">🏪 Pollería El Pollón</h3>
           <p class="text-lg">📍 Calle Vivar 1086, Iquique, Chile</p>
           <p class="text-lg mt-2">📞 +56 9 8692 5310</p>
-          <p class="text-lg mt-2">🕐 Horario: Lunes a Domingo 11:00 - 23:00</p>
+          <p class="text-lg mt-2">🕐 Horario: Lunes a Domingo 11:30 - 23:00</p>
         </div>
       </div>
     </div>
@@ -317,36 +318,52 @@
   <script>
     // --------- Config ----------
     const CURRENCY = new Intl.NumberFormat('es-CL', { style:'currency', currency:'CLP', maximumFractionDigits:0 });
-    const BAG_PRICE = 100; // CLP
+    const BAG_PRICE = 200; // CLP
 
     const products = {
       "ofertas-familiares": [
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
-        { name: "2 Pollos + Papas + Ensalada", description: "2 pollos, papas familiares, ensalada grande y 6 bebidas", price: 24500, image: "img/oferton mas fideo.png" },
-        { name: "Combo Familiar Especial", description: "Pollo entero, 1/2 pollo extra, papas, ensalada y 5 bebidas", price: 24500, image: "img/oferton mas chaufa pura papa.png" },
-        { name: "Mega Familiar", description: "2 pollos, papas XXL, ensalada, cremas y 8 bebidas", price: 23500, image:"img/oferton con fideo.png" },
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
-        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Oferton mas chaufa", description: "Pollo entero, papas fritas, arroz chaufa, ensalada y bebidas 1.5lt.", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Oferton mas fideo", description: "Pollo entero, papas fritas, fideos al pesto, ensalada y bebidas 1.5lt.", price: 24500, image: "img/oferton mas fideo.png" },
+        { name: "Oferton mas chaufa pura papa", description: "Pollo entero, papas fritas, extra papa frita, arroz chaufa y bebidas 1.5lt.", price: 24500, image: "img/oferton mas chaufa pura papa.png" },
+        { name: "Oferton con fideo", description: "Pollo entero, papas fritas, fideos al pesto y bebidas 1.5lt", price: 23500, image:"img/oferton con fideo.png" },
+        { name: "Oferton sin ensalada", description: "Pollo entero, papas fritas, arroz chaufa y bebidas 1.5lt", price: 23500, image: "img/oferton mas chaufa.png" },
+        { name: "Oferton pura papa", description: "Pollo entero, papas fritas, 1/2 porcion de papa frita y bebidas 1.5lt", price: 23500, image: "img/oferton mas chaufa.pngs, ensalada y" },
+        { name: "ofeton familiar", description: "Pollo entero, papas fritas, ensalada y bebidas 1.5lt", price: 22500, image: "img/oferton mas chaufa.png" },
         { name: "Mega Familiar", description: "2 pollos, papas XXL, ensalada, cremas y 8 bebidas", price: 54900, image:"https://images.unsplash.com/photo-1594221708779-94832f4320d1?w=400&h=300&fit=crop" }
       ],
       "ofertas-dos": [
-        { name: "1/2 Pollo + Papas para Dos", description: "Medio pollo, papas medianas, ensalada", price: 16900, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
-        { name: "Combo Pareja Especial", description: "1/2 pollo, papas, ensalada, anticuchos", price: 19900, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
+        { name: "1/2 combo chaufa", description: "Medio pollo, papas fritas, arroz cahaufa", price: 15600, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "1/2 combo", description: "Medio pollo, papas fritas, ensalada personal", price: 15100, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "1/2 combo pura papa", description: "Medio pollo, papas fritas mas cantidad,", price: 15100, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
       ],
       "ofertas-personales": [
-        { name: "1/4 Pollo Personal", description: "1/4 pollo, papas personales, ensalada", price: 9900, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
-        { name: "Personal Especial", description: "1/4 pollo, papas, ensalada, anticucho", price: 11900, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
+        { name: "1/4 combo", description: "1/4 pollo, papas fritas personales, ensalada personal", price: 8100, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "1/4 combo pura papa", description: "1/4 pollo, papas fritas personales mas cantidad, ensalada personal", price: 8100, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "Chaufa brasa", description: "1/4 pollo, arroz chaufa", price: 8200, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "Fideo al pesto con 1/4 de pollo", description: "1/4 pollo, fideos al pesto", price: 8100, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "Chaufa brasa con papas fritas", description: "1/4 pollo, papas fritas personal, arroz chaufa", price: 9200, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
       ],
       "platos-extras": [
-        { name: "Arroz Chaufa", description: "Arroz chaufa especial con pollo y verduras", price: 8500, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop" },
-        { name: "Lomo Saltado", description: "Lomo saltado con papas y arroz", price: 12500, image: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=400&h=300&fit=crop" }
+        { name: "Lomo saltado con chaufa", description: "Arroz chaufa especial con pollo y verduras", price: 12200, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop" },
+        { name: "Lomo saltado con arroz blanco", description: "", price: 11700, image: "" },
+        { name: "Tallarin saltado", description: "", price: 11700, image: "" },
+        { name: "Bistec a lo pobre", description: "", price: 10700, image: "" },
+        { name: "Bistec con fideos al pesto", description: "", price: 10700, image: "" },
+        { name: "Chuleta de cerdo", description: "", price: 10700, image: "" },
+        { name: "Pechuga a la plancha", description: "", price: 10200, image: "" },
+        { name: "Combo nuggets", description: "", price: 6700, image: "" },
+        { name: "Salchipapas", description: "Lomo saltado con papas y arroz", price: 6700, image: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=400&h=300&fit=crop" }
       ],
       "agregados": [
-        { name: "Papas Fritas Grandes", description: "Porción grande de papas crujientes", price: 3900, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop" },
-        { name: "Ensalada Fresca", description: "Ensalada mixta con vegetales frescos", price: 2900, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop" }
+        { name: "1 Pollo entero solo", description: "1 pollo entero", price: 3900, image: "" },
+        { name: "1/2 Pollo solo", description: " 1/2 pollo  -  parte truto y pechuga", price: 3900, image: "" },
+        { name: "1/4 pollo solo", description: "1/4 de polo -- truto o pechuga ---segun el stock", price: 3900, image: "" },
+        { name: "Porcion de papas fritas familiar", description: "Porción grande de papas crujientes", price: 3900, image: "" },
+        { name: "1/2 porcion de papas fritas", description: "Media Porción  de papas crujientes", price: 3900, image: "" },
+        { name: "Porcion de arroz chaufa", description: "1 Porción de arroz chaufa", price: 3900, image: "" },
+        { name: "Porcion de fideos al pesto", description: "1 Porción de fideos al pesto", price: 3900, image: "" },
+        { name: "Porcion de ensalada familiar", description: "Ensalada surtida - familiar ", price: 3900, image: "" },
+        { name: "Porcion de ensalada personal", description: "Ensalada surtida - personal", price: 2900, image: "" }
       ]
     };
 
