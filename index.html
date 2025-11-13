@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pollería El Pollón - Iquique</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;padding-bottom:100px}
+    .category-btn{transition:.3s}
+    .category-btn:hover{transform:translateY(-2px)}
+    .product-card{transition:.3s}
+    .product-card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,.15)}
+    .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+    .scrollbar-hide::-webkit-scrollbar{display:none}
+    .cart-badge{animation:pulse .5s ease}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+    .floating-cart{position:fixed;bottom:20px;right:20px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:float 3s ease-in-out infinite}
+    @media (max-width:768px){.floating-cart{bottom:10px;right:10px;left:10px;padding:12px 16px}.floating-cart>div{justify-content:space-between}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;overflow-y:auto}
+    .modal.active{display:flex;align-items:center;justify-content:center}
+    .toast{position:fixed;bottom:100px;right:20px;background:#10b981;color:#fff;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:2000;animation:slideIn .3s ease}
+    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    .logo-container{width:120px;height:120px;background:#fff;border-radius:50%;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .product-image{width:100%;height:200px;object-fit:cover}
+  </style>
+</head>
+<body class="bg-white">
+  <!-- Header -->
+  <header class="text-white py-4 px-4 sticky top-0 z-50" style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);box-shadow:0 4px 6px rgba(0,0,0,.1);">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="logo-container" style="width:60px;height:60px;">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="80" r="35" fill="#FFA500"/><ellipse cx="100" cy="130" rx="45" ry="55" fill="#FFD700"/>
+              <circle cx="90" cy="75" r="5" fill="#000"/><circle cx="110" cy="75" r="5" fill="#000"/>
+              <path d="M85 85 Q100 90 115 85" stroke="#FF6347" stroke-width="3" fill="none"/>
+              <text x="100" y="195" font-size="24" font-weight="bold" fill="#dc2626" text-anchor="middle">EL POLLÓN</text>
+            </svg>
+          </div>
+          <div class="hidden md:block">
+            <h1 class="text-2xl font-bold">Pollería El Pollón</h1>
+            <p class="text-sm opacity-90">📍 Iquique</p>
+          </div>
+        </div>
+        <div class="hidden lg:flex items-center gap-4">
+          <div class="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+            <span>📞</span>
+            <div>
+              <p class="text-xs opacity-75">Llámanos</p>
+              <p class="font-bold text-sm">+56 9 8692 5310</p>
+            </div>
+          </div>
+          <button id="view-cart-desktop" class="bg-yellow-400 text-red-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-300 transition flex items-center gap-2">
+            <span>🛒</span><span>Ver Mi Pedido</span>
+            <span id="cart-badge-desktop" class="bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">0</span>
+          </button>
+        </div>
+        <button id="hamburger-btn" class="lg:hidden text-white p-2 hover:bg-white/20 rounded-lg transition">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <div id="sidebar-menu" class="fixed top-0 left-0 h-full w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 z-[60] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b-2 border-red-600">
+        <h2 class="text-2xl font-bold text-red-800">📋 Menú</h2>
+        <button id="close-sidebar" class="text-gray-500 hover:text-red-600 transition">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <button id="view-cart-mobile" class="w-full bg-yellow-400 text-red-900 px-6 py-4 rounded-lg font-bold hover:bg-yellow-300 transition mb-6 flex items-center justify-between">
+        <span class="flex items-center gap-2"><span class="text-2xl">🛒</span><span>Ver Mi Pedido</span></span>
+        <span id="cart-badge-mobile" class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">0</span>
+      </button>
+
+      <div class="space-y-3">
+        <h3 class="text-lg font-bold text-gray-700 mb-3">🍽️ Categorías</h3>
+        <button class="sidebar-category w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-3 border-2 border-transparent hover:border-red-600" data-category="ofertas-familiares">👨‍👩‍👧‍👦 Ofertas Familiares</button>
+        <button class="sidebar-category w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-3 border-2 border-transparent hover:border-red-600" data-category="ofertas-dos">👫 Ofertas para Dos</button>
+        <button class="sidebar-category w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-3 border-2 border-transparent hover:border-red-600" data-category="ofertas-personales">🧑 Ofertas Personales</button>
+        <button class="sidebar-category w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-3 border-2 border-transparent hover:border-red-600" data-category="platos-extras">🍽️ Platos Extras</button>
+        <button class="sidebar-category w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-3 border-2 border-transparent hover:border-red-600" data-category="agregados">➕ Agregados</button>
+      </div>
+
+      <div class="mt-8 pt-6 border-t-2 border-gray-200 text-sm text-gray-600 space-y-2">
+        <p class="flex items-center gap-2"><span>📱</span><span>+56 9 8692 5310</span></p>
+        <p class="flex items-center gap-2"><span>📍</span><span>Calle Vivar 1086, Iquique</span></p>
+        <p class="flex items-center gap-2"><span>🕐</span><span>Lun-Dom: 11:00 - 23:00</span></p>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-[55] hidden"></div>
+
+  <!-- Banner (margen 0, sin título) -->
+  <section class="py-0 px-0">
+    <div class="relative overflow-hidden" style="height:400px;">
+      <div id="carousel-container" class="flex transition-transform duration-1000 ease-in-out h-full">
+        <!-- 10 imágenes, margen 0 de canto a canto -->
+        <img class="min-w-full h-full object-cover" src="img/baner oferta mas chaufa.png" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1562967914-608f82629710?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1608039829572-78524f79c4c7?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1551024506-0bccd828d307?w=1600&h=400&fit=crop" alt="">
+        <img class="min-w-full h-full object-cover" src="https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=1600&h=400&fit=crop" alt="">
+      </div>
+    </div>
+  </section>
+
+  <!-- Menú -->
+  <section class="py-8 px-4 bg-gray-50" style="box-shadow:0 4px 6px rgba(0,0,0,.05);">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-4xl font-bold text-center mb-8 text-red-800">🍽️ Nuestro Menú</h2>
+      <div class="mb-8 overflow-x-auto scrollbar-hide">
+        <div class="flex lg:flex-wrap lg:justify-center gap-4 min-w-max lg:min-w-0 px-2 lg:px-0">
+          <button class="category-btn bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 whitespace-nowrap flex-shrink-0" data-category="ofertas-familiares">👨‍👩‍👧‍👦 Ofertas Familiares</button>
+          <button class="category-btn bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 whitespace-nowrap flex-shrink-0" data-category="ofertas-dos">👫 Ofertas para Dos</button>
+          <button class="category-btn bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 whitespace-nowrap flex-shrink-0" data-category="ofertas-personales">🧑 Ofertas Personales</button>
+          <button class="category-btn bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 whitespace-nowrap flex-shrink-0" data-category="platos-extras">🍽️ Platos Extras</button>
+          <button class="category-btn bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 whitespace-nowrap flex-shrink-0" data-category="agregados">➕ Agregados</button>
+        </div>
+      </div>
+      <div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </div>
+  </section>
+
+  <!-- Carrito flotante -->
+  <div id="floating-cart" class="floating-cart bg-red-600 text-white px-6 py-4 rounded-full cursor-pointer hover:bg-red-700 transition">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🛒</span>
+      <div>
+        <div class="font-bold">Mi Carrito</div>
+        <div class="text-sm"><span id="floating-cart-count">0</span> productos - <span id="floating-cart-total">$0</span></div>
+      </div>
+      <span id="floating-cart-badge" class="cart-badge bg-yellow-400 text-red-900 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold ml-2">0</span>
+    </div>
+  </div>
+
+  <!-- Modal opciones -->
+  <div id="options-modal" class="modal">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h3 class="text-2xl font-bold mb-4 text-red-800">Personaliza tu pedido</h3>
+
+      <!-- Bebidas (solo familiares) -->
+      <div id="drink-section" class="mb-6 hidden">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block font-bold text-gray-800 text-sm md:text-base">BEBIDAS — <span class="text-gray-600 font-normal">elija su sabor</span></label>
+          <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold">Obligatorio</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- radios sabor -->
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer drink-option-label">
+            <input type="radio" name="drink" class="drink-radio" value="Coca Cola"><span class="font-semibold text-gray-800">COCA COLA</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer drink-option-label">
+            <input type="radio" name="drink" class="drink-radio" value="Inca Kola"><span class="font-semibold text-gray-800">INCA KOLA</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer drink-option-label">
+            <input type="radio" name="drink" class="drink-radio" value="Coca Cero"><span class="font-semibold text-gray-800">COCA CERO</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer drink-option-label">
+            <input type="radio" name="drink" class="drink-radio" value="Sprite"><span class="font-semibold text-gray-800">SPRITE</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer drink-option-label col-span-2">
+            <input type="radio" name="drink" class="drink-radio" value="Fanta"><span class="font-semibold text-gray-800">FANTA</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Bolsa -->
+      <div id="bag-section" class="mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block font-bold text-gray-800 text-sm md:text-base">BOLSA ECOLÓGICA</label>
+          <span id="bag-badge" class="text-xs px-2 py-1 rounded-full font-semibold"></span>
+        </div>
+        <div id="bag-options" class="grid grid-cols-2 gap-3">
+          <!-- Las opciones se pintan dinámicamente según categoría:
+               - Familias / Dos / Personales / Extras: SOLO "Agregar bolsa" (obligatorio)
+               - Agregados: "Agregar bolsa" y "Sin bolsa" (opcional) -->
+        </div>
+        <p id="bag-note" class="text-xs text-gray-600 mt-3"></p>
+      </div>
+
+      <!-- Cantidad -->
+      <div class="mb-4">
+        <label class="block font-bold mb-2 text-gray-700">Cantidad:</label>
+        <div class="flex items-center gap-4">
+          <button type="button" id="decrease-quantity" class="w-12 h-12 bg-gray-300 text-gray-700 rounded-full font-bold text-2xl hover:bg-gray-400">-</button>
+          <span id="product-quantity" class="text-3xl font-bold text-gray-800 min-w-[60px] text-center">1</span>
+          <button type="button" id="increase-quantity" class="w-12 h-12 bg-red-600 text-white rounded-full font-bold text-2xl hover:bg-red-700">+</button>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="mb-6">
+        <div class="text-xl font-extrabold text-red-800">Total: <span id="live-total">$0</span></div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="cancel-options" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold hover:bg-gray-400">Cancelar</button>
+        <button id="confirm-add" class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700">Agregar al Carrito</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal carrito -->
+  <div id="cart-modal" class="modal">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-red-800">🛒 Tu Carrito</h3>
+        <button id="close-cart" class="text-gray-500 hover:text-gray-700 text-3xl">×</button>
+      </div>
+      <div id="cart-items" class="mb-6 max-h-96 overflow-y-auto"></div>
+      <div class="border-t-2 pt-4 mb-6">
+        <div class="flex justify-between items-center text-xl font-bold text-red-800"><span>Total:</span><span id="cart-total">$0</span></div>
+      </div>
+      <button id="checkout-btn" class="w-full bg-green-600 text-white px-6 py-4 rounded-lg font-bold text-lg hover:bg-green-700">💬 Realizar Pedido por WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- Modal checkout -->
+  <div id="checkout-modal" class="modal">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <h3 class="text-2xl font-bold mb-4 text-red-800">📝 Datos de Entrega</h3>
+      <form id="checkout-form">
+        <div class="mb-4">
+          <label class="block font-bold mb-2 text-gray-700">Nombre Completo:</label>
+          <input type="text" id="customer-name" required class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-red-500 focus:outline-none" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="mb-4">
+          <label class="block font-bold mb-2 text-gray-700">Dirección de Entrega:</label>
+          <textarea id="customer-address" required class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-red-500 focus:outline-none" rows="3" placeholder="Ej: Av. Principal 123, Iquique"></textarea>
+        </div>
+        <div class="mb-6">
+          <label class="block font-bold mb-2 text-gray-700">Número de Teléfono:</label>
+          <input type="tel" id="customer-phone" required class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-red-500 focus:outline-none" placeholder="+56 9 8692 5310">
+        </div>
+        <div class="flex gap-3">
+          <button type="button" id="cancel-checkout" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold hover:bg-gray-400">Cancelar</button>
+          <button type="submit" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700">📤 Enviar Mi Pedido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ubicación -->
+  <section class="py-12 px-4 bg-gray-100">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-4xl font-bold text-center mb-8 text-red-800">📍 Nuestra Ubicación</h2>
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3747.8!2d-70.1502!3d-20.2141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjDCsDEyJzUwLjgiUyA3MMKwMDknMDAuNyJX!5e0!3m2!1ses!2scl!4v1234567890" width="100%" height="450" style="border:0" allowfullscreen loading="lazy"></iframe>
+        <div class="p-6 bg-red-600 text-white">
+          <h3 class="text-2xl font-bold mb-2">🏪 Pollería El Pollón</h3>
+          <p class="text-lg">📍 Calle Vivar 1086, Iquique, Chile</p>
+          <p class="text-lg mt-2">📞 +56 9 8692 5310</p>
+          <p class="text-lg mt-2">🕐 Horario: Lunes a Domingo 11:00 - 23:00</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Contacto</h3>
+          <p class="mb-2">📞 +56 9 8692 5310</p>
+          <p class="mb-2">📧 contacto@elpollon.cl</p>
+          <p class="mb-2">📍 Calle Vivar 1086, Iquique</p>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Información Legal</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-yellow-400 transition">📋 Libro de Reclamaciones</a></li>
+            <li><a href="#" class="hover:text-yellow-400 transition">🔒 Política de Privacidad</a></li>
+            <li><a href="#" class="hover:text-yellow-400 transition">📜 Términos y Condiciones</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Método de Pago</h3>
+          <div class="flex items-center gap-3 bg-green-600 px-4 py-3 rounded-lg">
+            <span>💵</span>
+            <div>
+              <p class="font-bold text-lg">Solo Efectivo</p>
+              <p class="text-sm opacity-90">Pago contra entrega</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-4 text-yellow-400">Síguenos</h3>
+          <div class="flex flex-col gap-3">
+            <a href="https://wa.me/56986925310" target="_blank" class="flex items-center gap-3 bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 transition">🟢 <span class="font-bold">WhatsApp</span></a>
+            <a href="#" class="flex items-center gap-3 bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition">📘 <span class="font-bold">Facebook</span></a>
+            <a href="#" class="flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition">📸 <span class="font-bold">Instagram</span></a>
+            <a href="#" class="flex items-center gap-3 bg-black px-4 py-2 rounded-lg hover:bg-gray-800 transition">🎵 <span class="font-bold">TikTok</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 pt-8 text-center">
+        <p class="text-gray-400">© 2024 Pollería El Pollón - Iquique, Chile. Todos los derechos reservados.</p>
+        <p class="text-gray-500 text-sm mt-2">Desarrollado con ❤️ para los amantes del buen pollo a la brasa</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // --------- Config ----------
+    const CURRENCY = new Intl.NumberFormat('es-CL', { style:'currency', currency:'CLP', maximumFractionDigits:0 });
+    const BAG_PRICE = 100; // CLP
+
+    const products = {
+      "ofertas-familiares": [
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "2 Pollos + Papas + Ensalada", description: "2 pollos, papas familiares, ensalada grande y 6 bebidas", price: 24500, image: "img/oferton mas fideo.png" },
+        { name: "Combo Familiar Especial", description: "Pollo entero, 1/2 pollo extra, papas, ensalada y 5 bebidas", price: 24500, image: "img/oferton mas chaufa pura papa.png" },
+        { name: "Mega Familiar", description: "2 pollos, papas XXL, ensalada, cremas y 8 bebidas", price: 23500, image:"img/oferton con fideo.png" },
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Pollo Entero + Papas Familiares", description: "Pollo a la brasa entero, papas grandes, ensalada y 4 bebidas", price: 24500, image: "img/oferton mas chaufa.png" },
+        { name: "Mega Familiar", description: "2 pollos, papas XXL, ensalada, cremas y 8 bebidas", price: 54900, image:"https://images.unsplash.com/photo-1594221708779-94832f4320d1?w=400&h=300&fit=crop" }
+      ],
+      "ofertas-dos": [
+        { name: "1/2 Pollo + Papas para Dos", description: "Medio pollo, papas medianas, ensalada", price: 16900, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "Combo Pareja Especial", description: "1/2 pollo, papas, ensalada, anticuchos", price: 19900, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
+      ],
+      "ofertas-personales": [
+        { name: "1/4 Pollo Personal", description: "1/4 pollo, papas personales, ensalada", price: 9900, image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=300&fit=crop" },
+        { name: "Personal Especial", description: "1/4 pollo, papas, ensalada, anticucho", price: 11900, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" }
+      ],
+      "platos-extras": [
+        { name: "Arroz Chaufa", description: "Arroz chaufa especial con pollo y verduras", price: 8500, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop" },
+        { name: "Lomo Saltado", description: "Lomo saltado con papas y arroz", price: 12500, image: "https://images.unsplash.com/photo-1595295333158-4742f28fbd85?w=400&h=300&fit=crop" }
+      ],
+      "agregados": [
+        { name: "Papas Fritas Grandes", description: "Porción grande de papas crujientes", price: 3900, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop" },
+        { name: "Ensalada Fresca", description: "Ensalada mixta con vegetales frescos", price: 2900, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop" }
+      ]
+    };
+
+    // --------- Estado ----------
+    let cart = [];
+    let currentProduct = null;
+    let currentCategory = "ofertas-familiares";
+    let selectedDrink = null;
+    let productQuantity = 1;
+    let bagChoice = null;     // 'add' | 'none' (en agregados puede ser 'none')
+
+    // --------- Util ----------
+    function money(v){ return CURRENCY.format(v); }
+    function showToast(msg){
+      const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+      document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+    }
+
+    // --------- Render products ----------
+    function renderProducts(category){
+      currentCategory = category;
+      const container = document.getElementById('products-container');
+      container.innerHTML = '';
+      (products[category]||[]).forEach(p=>{
+        const card=document.createElement('div');
+        card.className='product-card bg-white rounded-lg shadow-lg overflow-hidden';
+        card.innerHTML = `
+          <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="h-48 bg-gradient-to-br from-orange-400 to-red-500 hidden items-center justify-center text-6xl">🍗</div>
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-2 text-red-900">${p.name}</h3>
+            <p class="text-gray-600 text-sm mb-3">${p.description}</p>
+            <div class="flex justify-between items-center">
+              <span class="text-2xl font-bold text-red-700">${money(p.price)}</span>
+              <button class="add-to-cart px-4 py-2 rounded-lg font-bold text-white hover:opacity-90" style="background-color:#dc2626" data-product='${JSON.stringify(p)}'>Agregar</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.querySelectorAll('.category-btn').forEach(btn=>{
+        btn.style.backgroundColor = btn.dataset.category===category ? '#dc2626' : '#6b7280';
+      });
+    }
+
+    // --------- Carrito UI ----------
+    function updateCartUI(){
+      const c = cart.length;
+      const total = cart.reduce((s,i)=>s+i.total,0);
+      const fc=document.getElementById('floating-cart-count');
+      const fb=document.getElementById('floating-cart-badge');
+      const ft=document.getElementById('floating-cart-total');
+      const mb=document.getElementById('cart-badge-mobile');
+      const db=document.getElementById('cart-badge-desktop');
+      fc.textContent=c; fb.textContent=c; ft.textContent=money(total); mb.textContent=c; db.textContent=c;
+      fb.classList.add('cart-badge'); setTimeout(()=>fb.classList.remove('cart-badge'),500);
+    }
+    function renderCart(){
+      const wrap=document.getElementById('cart-items');
+      const t=document.getElementById('cart-total');
+      if(cart.length===0){ wrap.innerHTML='<p class="text-center text-gray-500 py-8">Tu carrito está vacío</p>'; t.textContent=money(0); return; }
+      let total=0;
+      wrap.innerHTML = cart.map((it,i)=>{
+        total+=it.total;
+        const bagLine = it.bagQty>0 ? `♻️ Bolsa Ecológica: x ${it.bagQty} (+ ${money(BAG_PRICE)} c/u)` : '';
+        const drinkLine = it.drink ? `🥤 Bebida: ${it.drink}` : '';
+        return `
+          <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <div class="flex-1">
+              <h4 class="font-bold text-gray-800">${it.name} × ${it.qty}</h4>
+              <p class="text-sm text-gray-600">${drinkLine}</p>
+              <p class="text-sm text-green-600">${bagLine}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-lg text-red-700">${money(it.total)}</p>
+              <button class="remove-item text-red-600 text-sm hover:underline" data-index="${i}">Eliminar</button>
+            </div>
+          </div>`;
+      }).join('');
+      t.textContent = money(total);
+    }
+
+    // --------- Modal: helpers ----------
+    function setDrinkVisible(visible){
+      document.getElementById('drink-section').classList.toggle('hidden', !visible);
+    }
+    function paintBagOptions(){
+      const badge = document.getElementById('bag-badge');
+      const opts = document.getElementById('bag-options');
+      const note = document.getElementById('bag-note');
+      opts.innerHTML=''; note.textContent=''; bagChoice=null;
+
+      const isFamiliares = currentCategory==='ofertas-familiares';
+      const isOtherMandatory = ['ofertas-dos','ofertas-personales','platos-extras'].includes(currentCategory);
+      const isAgregados = currentCategory==='agregados';
+
+      if(isFamiliares || isOtherMandatory){
+        // SOLO "Agregar bolsa" (obligatorio)
+        badge.textContent='Obligatorio';
+        badge.className='text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold';
+        opts.innerHTML = `
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
+            <input type="radio" name="bag" value="add" class="bag-radio">
+            <span class="font-semibold text-gray-800">Agregar bolsa (+ ${money(BAG_PRICE)})</span>
+          </label>
+        `;
+        note.innerHTML = isFamiliares
+          ? `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(BAG_PRICE)}</strong>. Se agregará <strong>1 bolsa por cada unidad</strong>.`
+          : `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(BAG_PRICE)}</strong>. Se agregará <strong>1 bolsa por pedido</strong>.`;
+      } else if(isAgregados){
+        // OPCIONAL (Agregar / Sin bolsa)
+        badge.textContent='Opcional';
+        badge.className='text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-semibold';
+        opts.innerHTML = `
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
+            <input type="radio" name="bag" value="add" class="bag-radio">
+            <span class="font-semibold text-gray-800">Agregar bolsa (+ ${money(BAG_PRICE)})</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
+            <input type="radio" name="bag" value="none" class="bag-radio">
+            <span class="font-semibold text-gray-800">Sin bolsa</span>
+          </label>
+        `;
+        note.textContent = `* La bolsa es opcional en esta categoría.`;
+      }
+    }
+    function computeLiveTotal(){
+      if(!currentProduct) return 0;
+      const base = currentProduct.price * productQuantity;
+      let bagQty = 0;
+      if(currentCategory==='ofertas-familiares'){
+        bagQty = (bagChoice==='add') ? productQuantity : 0;
+      }else if(['ofertas-dos','ofertas-personales','platos-extras'].includes(currentCategory)){
+        bagQty = (bagChoice==='add') ? 1 : 0;
+      }else if(currentCategory==='agregados'){
+        bagQty = (bagChoice==='add') ? 1 : 0;
+      }
+      const total = base + (bagQty * BAG_PRICE);
+      document.getElementById('live-total').textContent = money(total);
+      return { total, bagQty };
+    }
+
+    // --------- Eventos globales ----------
+    document.addEventListener('click', (e)=>{
+      // cambiar categoría
+      if(e.target.classList.contains('category-btn') || e.target.closest('.category-btn')){
+        const btn = e.target.closest('.category-btn');
+        renderProducts(btn.dataset.category);
+      }
+
+      // abrir modal opciones
+      if(e.target.classList.contains('add-to-cart')){
+        currentProduct = JSON.parse(e.target.dataset.product);
+        selectedDrink=null; productQuantity=1; bagChoice=null;
+
+        document.getElementById('product-quantity').textContent='1';
+        document.querySelectorAll('.drink-radio').forEach(r=>r.checked=false);
+
+        setDrinkVisible(currentCategory==='ofertas-familiares');
+        paintBagOptions();
+        computeLiveTotal();
+
+        document.getElementById('options-modal').classList.add('active');
+      }
+
+      // seleccionar bebida
+      if(e.target.classList.contains('drink-radio')){
+        selectedDrink = e.target.value;
+      }
+
+      // seleccionar bolsa
+      if(e.target.classList.contains('bag-radio')){
+        bagChoice = e.target.value; // 'add' | 'none'
+        computeLiveTotal();
+      }
+
+      // qty +
+      if(e.target.id==='increase-quantity'){
+        productQuantity++; document.getElementById('product-quantity').textContent=productQuantity;
+        computeLiveTotal();
+      }
+      // qty -
+      if(e.target.id==='decrease-quantity'){
+        if(productQuantity>1){ productQuantity--; document.getElementById('product-quantity').textContent=productQuantity; computeLiveTotal(); }
+      }
+
+      // cancelar
+      if(e.target.id==='cancel-options'){
+        document.getElementById('options-modal').classList.remove('active'); currentProduct=null;
+      }
+
+      // confirmar agregar
+      if(e.target.id==='confirm-add'){
+        // validaciones
+        if(currentCategory==='ofertas-familiares' && !selectedDrink){
+          showToast('⚠️ Debes seleccionar un sabor de bebida.');
+          return;
+        }
+        const mustBag = currentCategory!=='agregados';
+        if(mustBag && bagChoice!=='add'){
+          showToast('⚠️ Debes agregar la bolsa (obligatorio).');
+          return;
+        }
+        if(currentCategory==='agregados' && !bagChoice){ bagChoice='none'; }
+
+        const { total, bagQty } = computeLiveTotal();
+
+        cart.push({
+          name: currentProduct.name,
+          price: currentProduct.price,
+          qty: productQuantity,
+          drink: currentCategory==='ofertas-familiares' ? selectedDrink : null,
+          bagQty,
+          total
+        });
+
+        updateCartUI();
+        showToast('¡Producto agregado al carrito!');
+        document.getElementById('options-modal').classList.remove('active');
+        // reset
+        selectedDrink=null; productQuantity=1; bagChoice=null; currentProduct=null;
+      }
+
+      // abrir carrito
+      if(e.target.id==='floating-cart' || e.target.closest('#floating-cart')){
+        renderCart(); document.getElementById('cart-modal').classList.add('active');
+      }
+      if(e.target.id==='close-cart'){ document.getElementById('cart-modal').classList.remove('active'); }
+
+      // eliminar item
+      if(e.target.classList.contains('remove-item')){
+        const idx=parseInt(e.target.dataset.index); cart.splice(idx,1);
+        updateCartUI(); renderCart(); showToast('Producto eliminado del carrito');
+      }
+
+      // checkout
+      if(e.target.id==='checkout-btn'){
+        if(cart.length===0){ showToast('Tu carrito está vacío'); return; }
+        document.getElementById('cart-modal').classList.remove('active');
+        document.getElementById('checkout-modal').classList.add('active');
+      }
+      if(e.target.id==='cancel-checkout'){ document.getElementById('checkout-modal').classList.remove('active'); }
+    });
+
+    // enviar pedido
+    document.getElementById('checkout-form').addEventListener('submit',(e)=>{
+      e.preventDefault();
+      const name=document.getElementById('customer-name').value.trim();
+      const address=document.getElementById('customer-address').value.trim();
+      const phone=document.getElementById('customer-phone').value.trim();
+
+      let msg = `*🍗 NUEVO PEDIDO - POLLERÍA EL POLLÓN 🍗*%0A%0A`;
+      msg += `━━━━━━━━━━━━━━━━━━━━━━%0A*📋 DATOS DEL CLIENTE*%0A━━━━━━━━━━━━━━━━━━━━━━%0A`;
+      msg += `👤 *Nombre:* ${encodeURIComponent(name)}%0A`;
+      msg += `📱 *Teléfono:* ${encodeURIComponent(phone)}%0A`;
+      msg += `📍 *Dirección:* ${encodeURIComponent(address)}%0A%0A`;
+      msg += `━━━━━━━━━━━━━━━━━━━━━━%0A*🛒 DETALLE DEL PEDIDO*%0A━━━━━━━━━━━━━━━━━━━━━━%0A%0A`;
+
+      let total=0;
+      cart.forEach((it,i)=>{
+        msg += `*${i+1}. ${encodeURIComponent(it.name)}* × ${it.qty}%0A`;
+        msg += `   💰 Subtotal: ${encodeURIComponent(money(it.total))}%0A`;
+        if(it.drink){ msg += `   🥤 Bebida: ${encodeURIComponent(it.drink)}%0A`; }
+        if(it.bagQty>0){ msg += `   ♻️ Bolsa: x ${it.bagQty} (+ ${money(BAG_PRICE)} c/u)%0A`; }
+        msg += `%0A`; total += it.total;
+      });
+
+      msg += `━━━━━━━━━━━━━━━━━━━━━━%0A*💵 TOTAL A PAGAR: ${encodeURIComponent(money(total))}*%0A━━━━━━━━━━━━━━━━━━━━━━%0A%0A`;
+      msg += `⚠️ *EL delivery tiene costo adicional*%0A📍 *segun la distancia- $2.500 a $4.000*`;
+
+      const wa = '56986925310';
+      const url = `https://wa.me/${wa}?text=${msg}`;
+      window.open(url,'_blank','noopener,noreferrer');
+
+      cart=[]; updateCartUI(); document.getElementById('checkout-modal').classList.remove('active'); e.target.reset();
+      showToast('✅ ¡Pedido enviado a WhatsApp!');
+    });
+
+    // Sidebar
+    const hamburgerBtn=document.getElementById('hamburger-btn');
+    const closeSidebar=document.getElementById('close-sidebar');
+    const sidebarMenu=document.getElementById('sidebar-menu');
+    const sidebarOverlay=document.getElementById('sidebar-overlay');
+    function openSidebar(){ sidebarMenu.style.transform='translateX(0)'; sidebarOverlay.classList.remove('hidden'); document.body.style.overflow='hidden'; }
+    function closeSidebarMenu(){ sidebarMenu.style.transform='translateX(-100%)'; sidebarOverlay.classList.add('hidden'); document.body.style.overflow='auto'; }
+    hamburgerBtn.addEventListener('click',openSidebar); closeSidebar.addEventListener('click',closeSidebarMenu); sidebarOverlay.addEventListener('click',closeSidebarMenu);
+    document.querySelectorAll('.sidebar-category').forEach(btn=>{
+      btn.addEventListener('click',()=>{ renderProducts(btn.dataset.category); closeSidebarMenu(); document.querySelector('#products-container').scrollIntoView({behavior:'smooth',block:'start'}); });
+    });
+    document.getElementById('view-cart-mobile').addEventListener('click',()=>{ renderCart(); document.getElementById('cart-modal').classList.add('active'); closeSidebarMenu(); });
+    document.getElementById('view-cart-desktop').addEventListener('click',()=>{ renderCart(); document.getElementById('cart-modal').classList.add('active'); });
+
+    // Carrusel auto (cada 2s)
+    let currentSlide=0; const totalSlides=10;
+    const carouselContainer=document.getElementById('carousel-container');
+    function updateCarousel(){ carouselContainer.style.transform=`translateX(-${currentSlide*100}%)`; }
+    setInterval(()=>{ currentSlide=(currentSlide+1)%totalSlides; updateCarousel(); },2000);
+    updateCarousel();
+
+    // Inicio
+    renderProducts('ofertas-familiares');
+  </script>
+</body>
+</html>
