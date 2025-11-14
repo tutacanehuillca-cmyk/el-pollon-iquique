@@ -850,12 +850,12 @@
 
       items.forEach((it,i)=>{
         msg += `${i+1}. ${it.name} × ${it.qty}\n`;
-        msg += `   💰 Subtotal: ${money(it.total)}\n`;
+        msg += `   ━ Subtotal: ${money(it.total)}\n`;
         if(it.drink){
-          msg += `   🥤 Bebida: ${it.drink}\n`;
+          msg += `   ━ Bebida: ${it.drink}\n`;
         }
         if(it.bagQty>0){
-          msg += `   ♻️ Bolsa: x ${it.bagQty} (+ ${money(BAG_PRICE)} c/u)\n`;
+          msg += `   ━ Bolsa: x ${it.bagQty} (+ ${money(BAG_PRICE)} /u)\n`;
         }
         msg += `\n`;
       });
