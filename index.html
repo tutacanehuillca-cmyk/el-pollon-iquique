@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pollería El Pollón - Iquique</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- =================== FIREBASE (BASE DE DATOS EN LÍNEA) =================== -->
+  <!-- Versión 8.x para usar la API global "firebase" (más simple con este código) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- ======================================================================== -->
+
   <style>
     body{box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;margin:0;padding:0;padding-bottom:100px}
     .category-btn{transition:.3s}
@@ -126,7 +133,7 @@
       white-space:nowrap;
     }
 
-    /* === BOTÓN ADMIN (AHORA ESTÁTICO, NO FLOTANTE) === */
+    /* === BOTÓN ADMIN (ESTÁTICO) === */
     #admin-open-btn{
       background:linear-gradient(135deg,#111827 0%,#4b5563 100%);
       color:#f9fafb;
@@ -194,14 +201,13 @@
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <!-- LOGO: AHORA IMAGEN DE INTERNET (SÓLO CAMBIÓ ESTA PARTE) -->
+          <!-- LOGO -->
           <div class="logo-container" style="width:60px;height:60px;">
             <img 
-              src="img/logo.png" 
+              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=300&h=300&fit=crop" 
               alt="Logo temporal Pollería El Pollón" 
               style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
           </div>
-          <!-- FIN CAMBIO DE LOGO -->
           <div class="hidden md:block">
             <h1 class="text-2xl font-bold">Pollería El Pollón</h1>
             <p class="text-sm opacity-90">📍 Iquique</p>
@@ -655,9 +661,82 @@
 
   <script>
     // --------- Config ----------
+
     const CURRENCY = new Intl.NumberFormat('es-CL', { style:'currency', currency:'CLP', maximumFractionDigits:0 });
     const BAG_PRICE = 200; // CLP
     const WHATSAPP_NUMBER = '56986925310';
+
+    // ======================= FIREBASE CONFIGURACIÓN =========================
+    // IMPORTANTE:
+    // 1) Entra a https://console.firebase.google.com
+    // 2) Crea un proyecto
+    // 3) Activa "Realtime Database"
+    // 4) Copia aquí tu configuración del proyecto
+    // 5) Asegúrate de poner reglas de lectura/escritura con seguridad (solo tú)
+    // -----------------------------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+      projectId: "TU_PROYECTO",
+      storageBucket: "TU_PROYECTO.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+
+    let ordersRef = null; // referencia a la base de datos
+    const ORDERS_PATH = 'pollon_orders_v1'; // nodo donde se guardan los pedidos
+
+    function initOrdersBackend(){
+      try{
+        if(typeof firebase !== 'undefined' && !firebase.apps.length){
+          firebase.initializeApp(firebaseConfig);
+        }
+        if(typeof firebase !== 'undefined'){
+          ordersRef = firebase.database().ref(ORDERS_PATH);
+
+          // Suscripción en tiempo real: cada vez que cambia algo, se actualiza "orders"
+          ordersRef.on('value', snapshot => {
+            const data = snapshot.val() || {};
+            orders = Object.values(data);
+            orders.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+            const adminVisible = document.getElementById('admin-panel-modal')?.classList.contains('active');
+            if(adminVisible){
+              renderAdminPanel();
+            }
+          });
+        }
+      }catch(e){
+        console.warn('No se pudo inicializar Firebase. Se usará solo almacenamiento local.', e);
+      }
+    }
+
+    // Guarda el array completo de pedidos
+    function saveOrders(){
+      if(ordersRef){
+        const obj = {};
+        orders.forEach(o => { obj[o.id] = o; });
+        ordersRef.set(obj);
+      }else{
+        // Respaldo local si no hay Firebase
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+      }
+    }
+
+    function loadOrders(){
+      if(ordersRef){
+        // Con Firebase no hace falta cargar manualmente,
+        // la suscripción "on('value')" ya se encargará.
+      }else{
+        try{
+          const raw = localStorage.getItem(ORDERS_KEY);
+          orders = raw ? JSON.parse(raw) : [];
+        }catch(e){
+          orders = [];
+        }
+      }
+    }
+    // ===================== FIN CONFIG FIREBASE / BACKEND ====================
 
     const products = {
       "ofertas-familiares": [
@@ -715,7 +794,7 @@
     let productQuantity = 1;
     let bagChoice = null;
 
-    // Base de datos local de pedidos
+    // Base de datos de pedidos (ahora en línea con Firebase + respaldo local)
     let orders = [];
     const ORDERS_KEY = 'pollon_orders_v1';
 
@@ -728,18 +807,6 @@
     function showToast(msg){
       const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
       document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
-    }
-
-    function saveOrders(){
-      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-    }
-    function loadOrders(){
-      try{
-        const raw = localStorage.getItem(ORDERS_KEY);
-        orders = raw ? JSON.parse(raw) : [];
-      }catch(e){
-        orders = [];
-      }
     }
 
     // ======== TEXTO WHATSAPP (USADO TAMBIÉN PARA IMPRESORA TÉRMICA) ========
@@ -1279,9 +1346,10 @@
 
       // ADMIN refresh
       if(e.target.id==='admin-refresh'){
+        // Con Firebase se actualiza solo, pero forzamos recálculo
         loadOrders();
         renderAdminPanel();
-        showToast('Panel actualizado.');
+        showToast('Panel actualizado (datos en tiempo real).');
       }
 
       // ADMIN tabla acciones
@@ -1303,7 +1371,7 @@
           if(nuevo === 'Entregado' && !order.deliveredAt){
             order.deliveredAt = new Date().toISOString();
           }
-          saveOrders();
+          saveOrders(); // se guarda en Firebase + se dispara actualización en tiempo real
           renderAdminPanel();
           showToast(`Estado actualizado a: ${nuevo}`);
         }
@@ -1398,7 +1466,7 @@
           deliveredAt: null
         };
 
-        // Guardar pedido en base local
+        // Guardar pedido en base (Firebase o local)
         orders.push(order);
         saveOrders();
 
@@ -1416,7 +1484,7 @@
         const chm = document.getElementById('checkout-modal');
         if(chm) chm.classList.remove('active'); 
         e.target.reset();
-        showToast('✅ ¡Pedido enviado a WhatsApp y registrado en el panel!');
+        showToast('✅ ¡Pedido enviado a WhatsApp y registrado en el panel en línea!');
       });
     }
 
@@ -1577,7 +1645,8 @@
     }
 
     // --------- Inicio ---------
-    loadOrders();
+    initOrdersBackend();   // inicializa Firebase + suscripción en tiempo real
+    loadOrders();          // si no hay Firebase, usa localStorage
     renderProducts('ofertas-familiares');
     updateCartUI();
     if(chatbotMessagesEl){
