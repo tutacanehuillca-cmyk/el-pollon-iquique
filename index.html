@@ -7,9 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- =================== FIREBASE (BASE DE DATOS EN LÍNEA) =================== -->
-  <!-- Versión 8.x para usar la API global "firebase" (más simple con este código) -->
+  <!-- Versión 8.x para usar la API global "firebase" -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <!-- Dejamos Realtime Database cargado (por compatibilidad), aunque ahora usamos Firestore -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- Firestore (aquí es donde realmente guardaremos los pedidos) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <!-- ======================================================================== -->
 
   <style>
@@ -669,36 +672,50 @@
     // ======================= FIREBASE CONFIGURACIÓN =========================
     // IMPORTANTE:
     // 1) Entra a https://console.firebase.google.com
-    // 2) Crea un proyecto
-    // 3) Activa "Realtime Database"
-    // 4) Copia aquí tu configuración del proyecto
-    // 5) Asegúrate de poner reglas de lectura/escritura con seguridad (solo tú)
+    // 2) Crea un proyecto Web y activa "Cloud Firestore"
+    // 3) Copia la configuración de tu app web y reemplaza los valores de abajo
+    // 4) En Firestore crea una colección llamada: pollon_orders_v1
     // -----------------------------------------------------------------------
     const firebaseConfig = {
       apiKey: "TU_API_KEY",
       authDomain: "TU_PROYECTO.firebaseapp.com",
-      databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+      databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com", // no se usa, pero no molesta
       projectId: "TU_PROYECTO",
       storageBucket: "TU_PROYECTO.appspot.com",
       messagingSenderId: "TU_SENDER_ID",
       appId: "TU_APP_ID"
     };
 
-    let ordersRef = null; // referencia a la base de datos
-    const ORDERS_PATH = 'pollon_orders_v1'; // nodo donde se guardan los pedidos
+    let ordersRef = null; // referencia a la colección de Firestore
+    let db = null;        // referencia a Firestore
+    const ORDERS_PATH = 'pollon_orders_v1'; // nombre de la colección en Firestore
 
+    // Base de datos de pedidos (en memoria, sincronizada con Firestore)
+    let orders = [];
+    const ORDERS_KEY = 'pollon_orders_v1'; // respaldo local
+
+    // Inicializa Firestore y suscripción en tiempo real
     function initOrdersBackend(){
       try{
         if(typeof firebase !== 'undefined' && !firebase.apps.length){
           firebase.initializeApp(firebaseConfig);
         }
         if(typeof firebase !== 'undefined'){
-          ordersRef = firebase.database().ref(ORDERS_PATH);
+          db = firebase.firestore();
+          ordersRef = db.collection(ORDERS_PATH);
 
-          // Suscripción en tiempo real: cada vez que cambia algo, se actualiza "orders"
-          ordersRef.on('value', snapshot => {
-            const data = snapshot.val() || {};
-            orders = Object.values(data);
+          // Suscripción en tiempo real a la colección (ordenada por fecha)
+          ordersRef.orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+            const list = [];
+            snapshot.forEach(doc => {
+              const data = doc.data() || {};
+              list.push({
+                id: doc.id,
+                ...data
+              });
+            });
+            orders = list;
+            // Aseguramos orden por fecha por si acaso
             orders.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
             const adminVisible = document.getElementById('admin-panel-modal')?.classList.contains('active');
             if(adminVisible){
@@ -707,26 +724,41 @@
           });
         }
       }catch(e){
-        console.warn('No se pudo inicializar Firebase. Se usará solo almacenamiento local.', e);
+        console.warn('No se pudo inicializar Firebase/Firestore. Se usará solo almacenamiento local.', e);
       }
     }
 
-    // Guarda el array completo de pedidos
+    // Guarda el array completo de pedidos (Firestore + respaldo local)
     function saveOrders(){
-      if(ordersRef){
-        const obj = {};
-        orders.forEach(o => { obj[o.id] = o; });
-        ordersRef.set(obj);
+      if(ordersRef && db){
+        // Usamos un batch para escribir todos los pedidos
+        const batch = db.batch();
+        orders.forEach(o => {
+          // Garantizamos que tenga un ID
+          if(!o.id){
+            o.id = 'P' + Date.now();
+          }
+          const docRef = ordersRef.doc(o.id);
+          batch.set(docRef, o, { merge:true });
+        });
+        batch.commit().catch(err=>{
+          console.error('Error guardando pedidos en Firestore', err);
+        });
       }else{
-        // Respaldo local si no hay Firebase
-        localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+        // Respaldo local si no hay Firebase/Firestore
+        try{
+          localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+        }catch(e){
+          console.error('Error guardando pedidos en localStorage', e);
+        }
       }
     }
 
+    // Cargar pedidos (si no hay Firestore, usamos respaldo local)
     function loadOrders(){
-      if(ordersRef){
-        // Con Firebase no hace falta cargar manualmente,
-        // la suscripción "on('value')" ya se encargará.
+      if(ordersRef && db){
+        // Con Firestore, la suscripción onSnapshot ya los carga en "orders"
+        return;
       }else{
         try{
           const raw = localStorage.getItem(ORDERS_KEY);
@@ -793,10 +825,6 @@
     let selectedDrink = null;
     let productQuantity = 1;
     let bagChoice = null;
-
-    // Base de datos de pedidos (ahora en línea con Firebase + respaldo local)
-    let orders = [];
-    const ORDERS_KEY = 'pollon_orders_v1';
 
     // Admin
     let isAdminAuthenticated = false;
@@ -1346,7 +1374,7 @@
 
       // ADMIN refresh
       if(e.target.id==='admin-refresh'){
-        // Con Firebase se actualiza solo, pero forzamos recálculo
+        // Con Firestore se actualiza solo, pero forzamos recálculo de estadísticas y filtros
         loadOrders();
         renderAdminPanel();
         showToast('Panel actualizado (datos en tiempo real).');
@@ -1371,7 +1399,7 @@
           if(nuevo === 'Entregado' && !order.deliveredAt){
             order.deliveredAt = new Date().toISOString();
           }
-          saveOrders(); // se guarda en Firebase + se dispara actualización en tiempo real
+          saveOrders(); // se guarda en Firestore + respaldo local
           renderAdminPanel();
           showToast(`Estado actualizado a: ${nuevo}`);
         }
@@ -1466,7 +1494,7 @@
           deliveredAt: null
         };
 
-        // Guardar pedido en base (Firebase o local)
+        // Guardar pedido en base (Firestore o local)
         orders.push(order);
         saveOrders();
 
@@ -1484,7 +1512,7 @@
         const chm = document.getElementById('checkout-modal');
         if(chm) chm.classList.remove('active'); 
         e.target.reset();
-        showToast('✅ ¡Pedido enviado a WhatsApp y registrado en el panel en línea!');
+        showToast('✅ ¡Pedido enviado a WhatsApp y registrado en Firestore!');
       });
     }
 
@@ -1645,8 +1673,8 @@
     }
 
     // --------- Inicio ---------
-    initOrdersBackend();   // inicializa Firebase + suscripción en tiempo real
-    loadOrders();          // si no hay Firebase, usa localStorage
+    initOrdersBackend();   // inicializa Firebase + Firestore + suscripción en tiempo real
+    loadOrders();          // respaldo local en caso de que falle Firestore
     renderProducts('ofertas-familiares');
     updateCartUI();
     if(chatbotMessagesEl){
